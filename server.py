@@ -64,14 +64,16 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         self.initfunction()
 
-        recvData = self.request.recv(1024).strip()
-        cur_thread = threading.currentThread()
+        while True:
+            recvData = self.request.recv(1024).strip()
+            cur_thread = threading.currentThread()
 
-        recvDataList = recvData.split("/")
-        command = recvDataList[0]
-        data = recvDataList[1:]
+            recvDataList = recvData.split("/")
+            command = recvDataList[0]
+            data = recvDataList[1:]
 
-        self.functionDict[command](data)
+            print "[{}]:".format(cur_thread)
+            self.functionDict[command](data)
 
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
