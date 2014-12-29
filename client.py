@@ -20,6 +20,7 @@ try:
     sock.connect((HOST, PORT))
     print("Welcome to chat room!")
 
+
     # Login
     print("[Login]")
     while True:
@@ -49,3 +50,11 @@ try:
 
 finally:
     sock.close()
+
+
+def sign_up():
+    print "[Sign up session]"
+    account = raw_input("Account:")
+    password = raw_input("Password:")
+    send_data = "{}/{}/{}".format("1", account, password)
+    sock.sendall(send_data)

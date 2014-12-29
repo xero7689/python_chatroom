@@ -22,15 +22,13 @@ class ChatDB:
 
     def add_new_user(self, account, pwd):
         try:
-            self.cur.execute("SELECT * FROM user WHERE account=?", (account,))
-            print "Account Already exists"
-            return False
-        except sqlite3.Error as e:
-            print e.args[0]
-            print "Add new user: {}".format(account)
             self.cur.execute("INSERT INTO user(account, pwd) VALUES(?, ?)", (account, pwd))
             self.con.commit()
+            print "User {} sign up success.".format(account)
             return True
+        except sqlite3.Error as e:
+            print e.args[0]
+            return False
 
     def check_account(self, account, password):
         try:
