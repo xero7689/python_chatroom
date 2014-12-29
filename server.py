@@ -13,7 +13,6 @@ import threading
 import socket
 import db
 
-
 def wrap_socket_data(*args):
     wrapdata = '/'.join(args)
     return wrapdata
@@ -63,7 +62,9 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
     def client_talk(self, data):
         #  data[0] = time, data[1] = msg
         try:
-            self.db.add_new_post(self.user, data[1])
+            self.db.add_new_post(self.user, data[0], data[1])
+            print "[Client][{}]{}: {}".format(data[0], self.user, data[1])
+            self.request.sendall("[Server]: {}".format(data[1]))
         except:
             print "[Error]: client_talk"
 

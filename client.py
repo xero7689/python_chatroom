@@ -29,15 +29,15 @@ try:
         user_data = "{}/{}/{}".format(2, i_account, i_pwd)
         sock.sendall(user_data)
         received = sock.recv(1024)
-        if received is "valid":
+        if received == "valid":
             print "Authentication valid"
             break
-        elif received is "invalid":
-            print "Invalid Password"
-            print "Try again.."
+        elif received == "invalid":
+            print "Invalid Password."
+            print "Try again."
         else:
             print received
-            print "Try again.."
+            print "Try again."
 
     # Chating
     while True:
@@ -45,16 +45,12 @@ try:
         if clinet_msg is "":
             print "Stop chating.."
             break
-        send_time = time.ctime()
+        now = time.localtime()
+        send_time = "{}:{}:{}".format(now.tm_hour, now.tm_min, now.tm_sec)
         send_data = "{}/{}/{}".format(3, send_time, clinet_msg)
+        sock.sendall(send_data)
+        received = sock.recv(1024)
+        print received
 
 finally:
     sock.close()
-
-
-def sign_up():
-    print "[Sign up session]"
-    account = raw_input("Account:")
-    password = raw_input("Password:")
-    send_data = "{}/{}/{}".format("1", account, password)
-    sock.sendall(send_data)

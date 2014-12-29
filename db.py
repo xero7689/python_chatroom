@@ -16,9 +16,9 @@ class ChatDB:
 
     def init_table(self, tn, tattr):
         try:
-            self.cur.execute("SELECT * FROM {}".format(tn))
-        except sqlite3.Error as e:
             self.cur.execute("CREATE TABLE {} {}".format(tn, tattr))
+        except sqlite3.Error as e:
+            print e.args[0]
 
     def add_new_user(self, account, pwd):
         try:
@@ -53,21 +53,19 @@ class ChatDB:
     def add_today_chat(self):
         tn = self.get_today()
         try:
-            self.cur.execute("SELECT * FROM ?" + tn)
-        except sqlite3.Error as e:
-            self.init_table(tn, "(ptime text, account text, content text")
-            print("Add Today Chart!")
-
-    def add_new_post(self, user, content):
-        tn = self.get_today()
-        now = time.localtime()
-        ptime = "{}:{}:{}".format(now.tm_hour, now.tm_min, now.tm_sec)
-
-        try:
-            self.cur.execute("INSERT INTO " + tn + " VALUES(?, ?, ?)", (ptime, user, content))
-            self.con.commit()
+            self.cur.execute("CREATE TABLE {} (ptime text, account text, content text)".format(tn))
         except sqlite3.Error as e:
             print e.args[0]
+
+    def add_new_post(self, user, send_time, content):
+        tn = self.get_today()
+        while True:
+            try:
+                self.cur.execute("INSERT INTO " + tn + " VALUES(?, ?, ?)", (send_time, user, content))
+                self.con.commit()
+                break
+            except sqlite3.Error as e:
+                self.add_today_chat()
 
     def get_today(self):
         today = datetime.date.today()
