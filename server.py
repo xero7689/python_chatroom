@@ -13,15 +13,24 @@ import threading
 import socket
 import db
 
-def wrapSocketData(*args):
-    wrapData = '/'.join(args)
-    return wrapData
+
+def wrap_socket_data(*args):
+    wrapdata = '/'.join(args)
+    return wrapdata
 
 database = "Exia.db"
 
+
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
-    def initfunction(self):
+    """ Threaded Tcp Request Handler class
+
+    This class is going to be passed into ThreadedTcpServer as a parameter.
+
+
+    """
+
+    def init_function(self):
         self.db = db.ChatDB(database)
         self.user = None
         self.functionDict = {'1': self.signup,
@@ -34,12 +43,12 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
             print "{}-{}".format(data[0], data[1])
             print "is asking to sign up."
             if self.db.add_new_user(data[0], data[1]) is False:
-                self.request.sendall("[Regist]Fail!")
+                self.request.sendall("[Register]Fail!")
             else:
                 print "[Regist]-{}-{}".format(data[0], data[1])
-                self.request.sendall("[Regist]Done!")
+                self.request.sendall("[Register]Done!")
         except:
-            print "An error occured while regist account."
+            print "An error occurred while account registering."
 
     def log_in(self, data):
         flag = self.db.check_account(data[0], data[1])
@@ -62,15 +71,15 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
         pass
 
     def handle(self):
-        self.initfunction()
+        self.init_function()
 
         while True:
-            recvData = self.request.recv(1024).strip()
+            received_data = self.request.recv(1024).strip()
             cur_thread = threading.currentThread()
 
-            recvDataList = recvData.split("/")
-            command = recvDataList[0]
-            data = recvDataList[1:]
+            received_data_list = received_data.split("/")
+            command = received_data_list[0]
+            data = received_data_list[1:]
 
             print "[{}]:".format(cur_thread)
             self.functionDict[command](data)
