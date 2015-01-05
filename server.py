@@ -12,10 +12,8 @@ import SocketServer
 import threading
 import socket
 import db
-
-def wrap_socket_data(*args):
-    wrapdata = '/'.join(args)
-    return wrapdata
+import select
+import logging
 
 database = "Exia.db"
 
@@ -87,6 +85,9 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    def server_activate(self):
+        self.socket.listen(self.request_queue_size)
+
     def server_bind(self):
         # Avoid address already in use error
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
