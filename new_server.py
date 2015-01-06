@@ -60,7 +60,7 @@ class ChatRoomServer():
                     self.broadcast_data(request, "{} entered room\n".format(client_address))
 
                 else:
-                    print "Old socket in r ?"
+                    print sock
                     # Handle request process, write thread here?
                     try:
                         request, client_address = self.get_request()
