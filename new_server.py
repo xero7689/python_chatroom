@@ -19,11 +19,11 @@ class ChatRoomServer():
         - address : A tuple of host and port.
 
     """
-    def __init__(self, address, RequestHandlerClass):
+    def __init__(self, address):
         self.connection_list = []
         self.received_buffer = 4096
         self.address = address
-        self.RequestHandlerClass = RequestHandlerClass
+        # self.RequestHandlerClass = RequestHandlerClass
         self.request_queue_size = 10
         self.shut_down_request = False
         self.daemon_threads = False
@@ -60,21 +60,43 @@ class ChatRoomServer():
                     self.broadcast_data(request, "{} entered room\n".format(client_address))
 
                 else:
-                    print sock
                     # Handle request process, write thread here?
                     try:
-                        request, client_address = self.get_request()
-                    except socket.error:
-                        return
+                        # The request handle process is not using thread : (
+                        data = sock.recv(self.received_buffer)
+                        if data:
+                            self.broadcast_data(sock, "\r" + '<' + str(sock.getpeername()) + '>' + data)
+                    except:
+                        self.broadcast_data(sock, "Client {} is offline".format(client_address))
+                        sock.close()
+                        self.connection_list.remove(sock)
 
+                    ''' For process_request thread
                     if self.verify_request(request, client_address):
                         try:
                             self.process_request(request, client_address)
                         except:
                             logging.debug("process_request error")
+                    '''
 
         self.server_socket.close()
 
+    def finish_request(self, sock):
+        self.RequestHandlerClass(self, sock)
+
+    def process_request_thread(self, sock):
+        try:
+            self.finish_request(sock)
+        except:
+            pass
+
+    def process_request(self, sock):
+        t = threading.Thread(target=self.process_request_thread,
+                             args=(sock))
+        t.daemon = self.daemon_threads
+        t.start()
+
+    '''Process_request version 1
     def finish_request(self, request, client_address):
         self.RequestHandlerClass(request, client_address, self)
 
@@ -97,7 +119,7 @@ class ChatRoomServer():
 
     def verify_request(self, request, client_address):
         return True
-
+    '''
     def broadcast_data(self, sock, message):
         for socket in self.connection_list:
             if socket != self.server_socket and socket != sock:
@@ -114,5 +136,5 @@ class ChatRoomServer():
 if __name__ == "__main__":
     HOST = "127.0.0.1"
     PORT = 9999
-    server = ChatRoomServer((HOST, PORT), ChatRoom_handler.ChatRoomHandler)
+    server = ChatRoomServer((HOST, PORT))
     server.serve_forever()

@@ -2,6 +2,8 @@ __author__ = 'xero-mac'
 
 import threading
 
+
+''' for process_request version 1
 class ChatRoomHandler():
     """ Handler for chat room
     """
@@ -42,3 +44,4 @@ class ChatRoomHandler():
     def finish(self):
         pass
 
+'''

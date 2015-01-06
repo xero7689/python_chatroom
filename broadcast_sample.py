@@ -48,6 +48,7 @@ if __name__ == "__main__":
 
             # Some incoming message from a client
             else:
+                print sock
                 # Data recieved from client, process it
                 try:
                     # In Windows, sometimes when a TCP program closes abruptly,
