@@ -11,6 +11,7 @@ import db
 import logging
 import ChatRoom_handler
 
+DATABASE = "Exia.db"
 
 class ChatRoomServer():
     """ Chat Room Server Class
@@ -20,6 +21,8 @@ class ChatRoomServer():
 
     """
     def __init__(self, address):
+
+        """Basic server attribute"""
         self.connection_list = []
         self.received_buffer = 4096
         self.address = address
@@ -29,6 +32,15 @@ class ChatRoomServer():
         self.daemon_threads = False
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        self.db = db.ChatDB(DATABASE)
+
+        """Request handle attribute"""
+        self.command_handle = {'1': self.signup,
+                               '2': self.login,
+                               '3': self.chat,}
+        self.socket_user_map = {}  # Mapping socket and user!
+
+        """Prepare Server"""
         self.build_server()
 
     def build_server(self):
@@ -45,7 +57,6 @@ class ChatRoomServer():
 
             for sock in r:
                 if sock == self.server_socket:
-                    print "New connection sock in r"
                     try:
                         request, client_address = self.get_request()
                     except socket.error:
@@ -63,9 +74,12 @@ class ChatRoomServer():
                     # Handle request process, write thread here?
                     try:
                         # The request handle process is not using thread : (
-                        data = sock.recv(self.received_buffer)
-                        if data:
-                            self.broadcast_data(sock, "\r" + '<' + str(sock.getpeername()) + '>' + data)
+                        recv_data = sock.recv(self.received_buffer).strip()
+                        if recv_data:
+                            received_data_list = recv_data.split("/")
+                            command = received_data_list[0]
+                            data = received_data_list[1:]
+                            self.command_handle[command](data, sock)
                     except:
                         self.broadcast_data(sock, "Client {} is offline".format(client_address))
                         sock.close()
@@ -120,6 +134,37 @@ class ChatRoomServer():
     def verify_request(self, request, client_address):
         return True
     '''
+
+    def signup(self, data, sock):
+        print "{} try to sign up.".format(data[0])
+        if self.db.add_new_user(data[0], data[1]):
+            print "[SignUp] Success."
+            sock.sendall("SignUp Success")
+        else:
+            print "[SignUp] Fail."
+            sock.sendall("SignUp Fail")
+
+    def login(self, data, sock):
+        print "{} try to login.".format(data[0])
+        flag = self.db.check_account(data[0], data[1])
+        if flag is True:
+            print "Valid account and password."
+            sock.sendall("valid")
+            self.map_socket_user(sock, data[0])
+        elif flag is False:
+            sock.sendall("invalid")
+        else:
+            sock.sendall(flag)
+
+    def chat(self, data, sock):
+        """Chat command
+        - data[0] : sending time
+        - data[1] : message
+        """
+        self.db.add_new_post(self.socket_user_map[sock], data[0], data[1])
+        print "{}: {}".format(self.socket_user_map[sock], data[1])
+        self.broadcast_data(sock, data[1])
+
     def broadcast_data(self, sock, message):
         for socket in self.connection_list:
             if socket != self.server_socket and socket != sock:
@@ -130,11 +175,14 @@ class ChatRoomServer():
                     socket.close()
                     self.connection_list.remove(socket)
 
+    def map_socket_user(self, sock, user):
+        self.socket_user_map[sock] = "user"
+
     def get_request(self):
         return self.server_socket.accept()
 
 if __name__ == "__main__":
-    HOST = "127.0.0.1"
+    HOST = socket.gethostbyname(socket.gethostname())
     PORT = 9999
     server = ChatRoomServer((HOST, PORT))
     server.serve_forever()

@@ -6,20 +6,25 @@ __author__ = 'Peter'
 import socket
 import sys
 import time
+import select
 
 LOCAL = "127.0.0.1"
 
 HOST, PORT = LOCAL, 9999
 data = " ".join(sys.argv[1:])
 
+def prompt():
+    sys.stdout.write("<You> ")
+    sys.stdout.flush()
 
 # Create a socket (SOCK_STREAM means a TCP socket)
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+socket_list = [sys.stdin, sock]
+
 try:
     sock.connect((HOST, PORT))
     print("Welcome to chat room!")
-
 
     # Login
     print("[Login]")
@@ -40,17 +45,21 @@ try:
             print "Try again."
 
     # Chating
+    prompt()
     while True:
-        clinet_msg = raw_input("{}: ".format(i_account))
-        if clinet_msg is "":
-            print "Stop chating.."
-            break
-        now = time.localtime()
-        send_time = "{}:{}:{}".format(now.tm_hour, now.tm_min, now.tm_sec)
-        send_data = "{}/{}/{}".format(3, send_time, clinet_msg)
-        sock.sendall(send_data)
-        received = sock.recv(1024)
-        print received
+        r, w, e = select.select(socket_list, [], [])
+        for socket in r:
+            if socket == sock:
+                data = sock.recv(4096)
+                sys.stdout.write(data)  # Waiting for data
+                prompt()
+            else:
+                msg = sys.stdin.readline()
+                now = time.localtime()
+                send_time = "{}:{}:{}".format(now.tm_hour, now.tm_min, now.tm_sec)
+                send_data = "{}/{}/{}".format(3, send_time, msg)
+                sock.sendall(send_data)
+                prompt()
 
 finally:
     sock.close()
