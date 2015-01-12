@@ -8,10 +8,11 @@ import sys
 import time
 import select
 
-LOCAL = "127.0.0.1"
+LOCAL = socket.gethostbyname(socket.gethostname())
 
 HOST, PORT = LOCAL, 9999
 data = " ".join(sys.argv[1:])
+user = ""
 
 def prompt():
     sys.stdout.write("<You> ")
@@ -31,13 +32,14 @@ try:
     while True:
         i_account = raw_input("Account:")
         i_pwd = raw_input("Password:")
-        user_data = "{}/{}/{}".format(2, i_account, i_pwd)
+        user_data = "{}/{}/{}".format("login", i_account, i_pwd)
         sock.sendall(user_data)
         received = sock.recv(1024)
-        if received == "valid":
+        if received == "1":
             print "Authentication valid"
+            user = i_account
             break
-        elif received == "invalid":
+        elif received == "0":
             print "Invalid Password."
             print "Try again."
         else:
@@ -57,7 +59,7 @@ try:
                 msg = sys.stdin.readline()
                 now = time.localtime()
                 send_time = "{}:{}:{}".format(now.tm_hour, now.tm_min, now.tm_sec)
-                send_data = "{}/{}/{}".format(3, send_time, msg)
+                send_data = "{}/{}/{}".format("chat", user, msg)
                 sock.sendall(send_data)
                 prompt()
 

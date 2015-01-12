@@ -46,7 +46,7 @@ def prompt() :
 #main function
 if __name__ == "__main__":
 
-	host = "127.0.0.1"
+	host = socket.gethostbyname(socket.gethostname())
 	port = 9999
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

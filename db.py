@@ -35,10 +35,8 @@ class ChatDB:
             dbdata = self.cur.execute("SELECT * FROM user WHERE account=?", (account,))
             user = dbdata.next()
             if password == user[1]:
-                print("Valid Password!")
                 return True
             else:
-                print("Invalid Password!")
                 return False
 
         except StopIteration:
