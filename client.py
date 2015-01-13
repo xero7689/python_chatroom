@@ -46,7 +46,7 @@ try:
             print received
             print "Try again."
 
-    # Chating
+    # Chat
     prompt()
     while True:
         r, w, e = select.select(socket_list, [], [])

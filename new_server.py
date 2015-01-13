@@ -24,9 +24,8 @@ class ChatRoomServer():
 
         """Basic server attribute"""
         self.connection_list = []
-        self.received_buffer = 4096
+        self.received_buffer = 256
         self.address = address
-        # self.RequestHandlerClass = RequestHandlerClass
         self.request_queue_size = 10
         self.shut_down_request = False
         self.daemon_threads = False
@@ -37,7 +36,7 @@ class ChatRoomServer():
         """Request handle attribute"""
         self.command_handle = {'signup': self.signup,
                                'login': self.login,
-                               # 'chat': self.chat,  chat function seems have a bug
+                               'chat': self.chat,
                                }
         self.socket_user_map = {}  # Mapping socket and user!
 
@@ -50,7 +49,7 @@ class ChatRoomServer():
         self.server_socket.listen(self.request_queue_size)
         self.connection_list.append(self.server_socket)
         logging.debug("Server start at {}", self.address)
-        print "Chat Room Start at {}".format(self.address)
+        print "Exia-Server\nStart at {}".format(self.address)
 
     def serve_forever(self):
         while not self.shut_down_request:
@@ -69,7 +68,7 @@ class ChatRoomServer():
                     print "Client {} connected".format(client_address)
 
                 # BroadCast Data!
-                    self.broadcast_data(request, "{} entered room\n".format(client_address))
+                    # self.broadcast_data(request, "{} entered room\n".format(client_address))
 
                 else:
                     # Handle request process, write thread here?
@@ -77,19 +76,11 @@ class ChatRoomServer():
                         # The request handle process is not using thread : (
                         recv_data = sock.recv(self.received_buffer).strip()
                         if recv_data:
-                            print recv_data
                             received_data_list = recv_data.split("/")
                             command = received_data_list[0]
                             data = received_data_list[1:]
                             try:
-                                """ Some problem while trying to chat from android app.
-                                    I move the chat outside command_handle function.
-                                """
-                                if command == "chat":
-                                    print "{}: {}".format(data[0], data[1])
-                                    self.broadcast_data(sock, "{}: {}".format(data[0], data[1]))
-                                else:
-                                    self.command_handle[command](data, sock)
+                                self.command_handle[command](data, sock)
                             except:
                                 print "Invalid Message: {}".format(recv_data)
                                 sock.sendall("{}".format(recv_data))
@@ -131,6 +122,7 @@ class ChatRoomServer():
         if flag is True:
             print "Valid account and password."
             sock.sendall("1")
+            self.broadcast_data(sock, "{} entered room\n".format(data[0]))
             self.map_socket_user(sock, data[0])
         elif flag is False:
             sock.sendall("0")
