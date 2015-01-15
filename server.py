@@ -9,7 +9,6 @@ import select
 import threading
 import db
 import logging
-import ChatRoom_handler
 
 DATABASE = "Exia.db"
 
